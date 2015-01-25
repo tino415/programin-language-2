@@ -16,8 +16,10 @@ functions = {}
 globvars = {}
 
 def lexical_analisys(content):
+    """ Transform stream of chars into tokens recursively """
 
     class Token:
+        """ Class representing one token """
         def __init__(self, name, pattern, value = None, clear = 0):
             self.name = name
             self.pattern = compile(pattern)
@@ -26,7 +28,9 @@ def lexical_analisys(content):
         def match(self, content): return self.pattern.match(content)
     
     def tokenize(token_defs, content):
-        while len(content) > 0:
+        matched = True
+        while len(content) > 0 and matched:
+            matched = False
             for token in token_defs:
                 match = token.match(content)
                 if match:
@@ -36,40 +40,44 @@ def lexical_analisys(content):
                             tokens.append(match.group(token.value))
 
                     content = content[len(match.group(token.clear)):]
+                    matched = True
                     break
 
 
     token_defs = [
-        Token('ASSIGN', 'LET'),
-        Token('PRINT', 'PRINT'),
-        Token('INPUT', 'INPUT'),
-        Token('EQUALS', 'EQ'),
-        Token('GREATER', 'GR'),
-        Token('GREATERTHEN', 'GT'),
-        Token('CALL' , 'CALL'),
-        Token('CONCAT', 'CONCAT'),
-        Token('DEF', 'DEF'),
-        Token('SUM', 'SUM'),
-        Token('SUB', 'SUB'),
-        Token('IF', 'IF'),
-        Token('RETURN', 'RET'),
-        Token('EXPORT', 'EXPR'),
-        Token('IMPORT', 'IMPRT'),
-        Token('WHILE', 'WHILE'),
-        Token('AND', 'AND'),
-        Token('OR', 'OR'),
-        Token('NOT', 'NOT'),
-        Token('LOAD', 'LOAD'),
-        Token('CODE', 'CODE'),
-        Token('EXEC', 'EXEC'),
-        Token('LBRAC', '\('),
-        Token('RBRAC', '\)'),
-        Token('STRING', '"([^"]*)"', 1),
-        Token('IGNORE', '([ \n]+|# .*\n)'),
-        Token('START_BLOCK', '\\{'),
-        Token('END_BLOCK', '\\}'),
-        Token('NUMBER', '[0-9]+', 0),
-        Token('NAME', '[a-zA-Z][a-zA-Z0-9_]*', 0),
+        # Keywords
+        Token('ASSIGN'      , 'LET'            ),
+        Token('PRINT'       , 'PRINT'          ),
+        Token('INPUT'       , 'INPUT'          ),
+        Token('EQUALS'      , 'EQ'             ),
+        Token('GREATER'     , 'GR'             ),
+        Token('GREATERTHEN' , 'GT'             ),
+        Token('CALL'        , 'CALL'           ),
+        Token('CONCAT'      , 'CONCAT'         ),
+        Token('DEF'         , 'DEF'            ),
+        Token('SUM'         , 'SUM'            ),
+        Token('SUB'         , 'SUB'            ),
+        Token('IF'          , 'IF'             ),
+        Token('RETURN'      , 'RET'            ),
+        Token('EXPORT'      , 'EXPR'           ),
+        Token('IMPORT'      , 'IMPRT'          ),
+        Token('WHILE'       , 'WHILE'          ),
+        Token('AND'         , 'AND'            ),
+        Token('OR'          , 'OR'             ),
+        Token('NOT'         , 'NOT'            ),
+        Token('LOAD'        , 'LOAD'           ),
+        Token('CODE'        , 'CODE'           ),
+        Token('EXEC'        , 'EXEC'           ),
+        Token('LBRAC'       , '\\('            ),
+        Token('RBRAC'       , '\\)'            ),
+        Token('START_BLOCK' , '\\{'            ),
+        Token('END_BLOCK'   , '\\}'            ),
+        Token('IGNORE'      , '([ \n]+|# .*\n)'),
+
+        # Token with values
+        Token('STRING'      , '"([^"]*)"'             , 1),
+        Token('NUMBER'      , '[0-9]+'                , 0),
+        Token('NAME'        , '[a-zA-Z][a-zA-Z0-9_]*' , 0),
     ]
 
     tokens = ['START_BLOCK']
@@ -81,7 +89,8 @@ def lexical_analisys(content):
     return tokens
 
 def syntactic_tree(tokens):
-    
+    """ Create execution tree from stream of tokens """
+
     def build_multiple(count):
         result = []
         for i in range(0, count):
@@ -139,63 +148,59 @@ def syntactic_tree(tokens):
             
 
     def build_branch(token):
-        if token == 'ASSIGN': return build_wargs(token,2)
-        elif token == 'SUM' : return build_wargs(token,2)
-        elif token == 'SUB' : return build_wargs(token,2)
-        elif token == 'AND' : return build_wargs(token,2)
-        elif token == 'OR' : return build_wargs(token,2)
-        elif token == 'PRINT': return build_wargs(token,1)
-        elif token == 'CONCAT': return build_wargs(token, 2)
-        elif token == 'NUMBER': return build_value(token)
-        elif token == 'INPUT': return build_wargs(token, 1)
-        elif token == 'START_BLOCK': return build_block()
-        elif token == 'NAME': return build_value(token)
-        elif token == 'STRING' : return build_value(token)
-        elif token == 'EXPORT' : return build_wargs(token, 1)
-        elif token == 'IMPORT' : return build_wargs(token, 1)
-        elif token == 'RETURN' : return build_wargs(token, 1)
-        elif token == 'IF' : return build_wargs(token, 3)
-        elif token == 'NOT' : return build_wargs(token, 1)
-        elif token == 'WHILE' : return build_wargs(token, 2)
-        elif token == 'EQUALS' : return build_wargs(token, 2)
-        elif token == 'GREATER' : return build_wargs(token, 2)
+        if token == 'ASSIGN'        : return build_wargs(token, 2)
+        elif token == 'SUM'         : return build_wargs(token, 2)
+        elif token == 'SUB'         : return build_wargs(token, 2)
+        elif token == 'AND'         : return build_wargs(token, 2)
+        elif token == 'OR'          : return build_wargs(token, 2)
+        elif token == 'PRINT'       : return build_wargs(token, 1)
+        elif token == 'CONCAT'      : return build_wargs(token, 2)
+        elif token == 'NUMBER'      : return build_value(token)
+        elif token == 'INPUT'       : return build_wargs(token, 1)
+        elif token == 'START_BLOCK' : return build_block()
+        elif token == 'NAME'        : return build_value(token)
+        elif token == 'STRING'      : return build_value(token)
+        elif token == 'EXPORT'      : return build_wargs(token, 1)
+        elif token == 'IMPORT'      : return build_wargs(token, 1)
+        elif token == 'RETURN'      : return build_wargs(token, 1)
+        elif token == 'IF'          : return build_wargs(token, 3)
+        elif token == 'NOT'         : return build_wargs(token, 1)
+        elif token == 'WHILE'       : return build_wargs(token, 2)
+        elif token == 'EQUALS'      : return build_wargs(token, 2)
+        elif token == 'GREATER'     : return build_wargs(token, 2)
         elif token == 'GREATERTHEN' : return build_wargs(token, 2)
-        elif token == 'DEF' : build_def()
-        elif token == 'CALL' : return build_call()
-        elif token == 'CODE' : return build_wargs(token, 1)
-        elif token == 'EXEC' : return build_wargs(token, 1)
-        elif token == 'LOAD' : return build_wargs(token, 1)
+        elif token == 'DEF'         : build_def()
+        elif token == 'CALL'        : return build_call()
+        elif token == 'CODE'        : return build_wargs(token, 1)
+        elif token == 'EXEC'        : return build_wargs(token, 1)
+        elif token == 'LOAD'        : return build_wargs(token, 1)
         else: print('UNKNOWN', token)
     
     return build_branch(tokens.pop(0))
 
-def parse(tree, loca_vars):
-
+def interpret(tree, loca_vars):
+    """ Execute syntactic tree with predefined local_vars """
     def eval_list(exprs):
         res = []
         for expr in exprs:
             res.append(eval_expr(expr))
         return res
+
+    def eval_math(function, args):
+        args = eval_list(args)
+        return {
+            'type' : 'NUMBER',
+            'value' : function(int(args[0]['value']), int(args[1]['value']))
+        }
     
+    def eval_sum(expr): return eval_math(lambda a, b: a + b, expr['args'])
+    def eval_sub(expr): return eval_math(lambda a, b: a - b, expr['args'])
+
     def eval_block(expr):
         for stat in expr['exprs']:
             if stat['type'] == 'RETURN':
                 return eval_expr(stat['args'][0])
             else: eval_expr(stat)
-
-    def eval_sum(expr):
-        args = eval_list(expr['args'])
-        return {
-            'type' : 'NUMBER',
-            'value' : int(args[0]['value']) + int(args[1]['value'])
-        }
-
-    def eval_sub(expr):
-        args = eval_list(expr['args'])
-        return {
-            'type' : 'NUMBER',
-            'value' : int(args[0]['value']) - int(args[1]['value'])
-        }
     
     def eval_concat(expr):
         args = eval_list(expr['args'])
@@ -223,7 +228,7 @@ def parse(tree, loca_vars):
             local[arg] = expr['params'][i]
             i += 1
 
-        return parse(
+        return interpret(
             functions[func_name]['body'],
             local
         )
@@ -239,84 +244,49 @@ def parse(tree, loca_vars):
         if true(condition):
             return eval_expr(expr['args'][1])
         else: return eval_expr(expr['args'][2])
+    
+    def return_logic(condition):
+        if condition:
+            return {
+                'type' : 'NUMBER',
+                'value' : "1"
+            }
+        else: return {
+                'type' : 'NUMBER',
+                'value' : "0"
+            }
 
     def eval_equals(expr):
         args = eval_list(expr['args'])
 
-        if str(args[0]['value']) == str(args[1]['value']):
-            return {
-                'type' : 'NUMBER',
-                'value' : "1"
-            }
-        else: return {
-                'type' : 'NUMBER',
-                'value' : "0"
-            }
+        return return_logic(
+            str(args[0]['value']) == str(args[1]['value'])
+        )
 
-    def eval_greater(expr):
-        args = eval_list(expr['args'])
+    def eval_cmp(function, args):
+        args = eval_list(args)
 
-        if int(args[0]['value']) > int(args[1]['value']):
-            return {
-                'type' : 'NUMBER',
-                'value' : "1"
-            }
-        else: return {
-                'type' : 'NUMBER',
-                'value' : "0"
-            }
+        return return_logic(
+            function(int(args[0]['value']), int(args[1]['value']))
+        )
 
-    def eval_greaterthen(expr):
-        args = eval_list(expr['args'])
+    def eval_greater(expr): return eval_cmp(lambda a,b: a > b, expr['args'])
+    def eval_greaterthen(expr): return eval_cmp(lambda a,b: a >= b, expr['args'])
 
-        if int(args[0]['value']) >= int(args[1]['value']):
-            return {
-                'type' : 'NUMBER',
-                'value' : "1"
-            }
-        else: return {
-                'type' : 'NUMBER',
-                'value' : "0"
-            }
+    def eval_logic(expr, args):
+        args = eval_list(args)
 
-    def eval_and(expr):
-        args = eval_list(expr['args'])
+        return return_logic(
+            function(true(args[0]), true(args[1]))
+        )
 
-        if true(args[0]) and true(args[1]):
-            return {
-                'type' : 'NUMBER',
-                'value' : "1"
-            }
-        else: return {
-                'type' : 'NUMBER',
-                'value' : "0"
-            }
-
-    def eval_or(expr):
-        args = eval_list(expr['args'])
-
-        if true(args[0]) or true(args[1]):
-            return {
-                'type' : 'NUMBER',
-                'value' : "1"
-            }
-        else: return {
-                'type' : 'NUMBER',
-                'value' : "0"
-            }
+    def eval_and(expr): return eval_logic(lambda a,b: a and b, expr['args'])
+    def eval_or(expr): return eval_logic(lambda a,b: a or b, expr['args'])
     
     def eval_not(expr):
         arg = eval_expr(expr['args'][0])
 
-        if true(arg):
-            return {
-                'type' : 'NUMBER',
-                'value' : "0"
-            }
-        else: return {
-            'type' : 'NUMBER',
-            'value' : "1"
-        }
+        return return_logic(not true(arg))
     
     def eval_load(expr):
         load(expr['args'][0]['value'])
@@ -348,36 +318,36 @@ def parse(tree, loca_vars):
 
 
     def eval_expr(expr):
-        if expr['type'] == 'BLOCK': return eval_block(expr)
-        elif expr['type'] == 'SUM': return eval_sum(expr)
-        elif expr['type'] == 'SUB' : return eval_sub(expr)
-        elif expr['type'] == 'ASSIGN' : return eval_assign(expr)
-        elif expr['type'] == 'NAME' : return eval_get(expr)
-        elif expr['type'] == 'CALL' : return eval_call(expr)
-        elif expr['type'] == 'CONCAT' : return eval_concat(expr)
-        elif expr['type'] == 'LOAD' : return eval_load(expr)
-        elif expr['type'] == 'PRINT' : return eval_print(expr)
-        elif expr['type'] == 'IF' : return eval_if(expr)
-        elif expr['type'] == 'IMPORT' : return eval_import(expr)
-        elif expr['type'] == 'EXPORT' : return eval_export(expr)
-        elif expr['type'] == 'INPUT' : return eval_input(expr)
-        elif expr['type'] == 'EQUALS' : return eval_equals(expr)
-        elif expr['type'] == 'GREATER' : return eval_greater(expr)
+        if expr['type'] == 'BLOCK'         : return eval_block(expr)
+        elif expr['type'] == 'SUM'         : return eval_sum(expr)
+        elif expr['type'] == 'SUB'         : return eval_sub(expr)
+        elif expr['type'] == 'ASSIGN'      : return eval_assign(expr)
+        elif expr['type'] == 'NAME'        : return eval_get(expr)
+        elif expr['type'] == 'CALL'        : return eval_call(expr)
+        elif expr['type'] == 'CONCAT'      : return eval_concat(expr)
+        elif expr['type'] == 'LOAD'        : return eval_load(expr)
+        elif expr['type'] == 'PRINT'       : return eval_print(expr)
+        elif expr['type'] == 'IF'          : return eval_if(expr)
+        elif expr['type'] == 'IMPORT'      : return eval_import(expr)
+        elif expr['type'] == 'EXPORT'      : return eval_export(expr)
+        elif expr['type'] == 'INPUT'       : return eval_input(expr)
+        elif expr['type'] == 'EQUALS'      : return eval_equals(expr)
+        elif expr['type'] == 'GREATER'     : return eval_greater(expr)
         elif expr['type'] == 'GREATERTHEN' : return eval_greaterthen(expr)
-        elif expr['type'] == 'AND' : return eval_and(expr)
-        elif expr['type'] == 'OR' : return eval_or(expr)
-        elif expr['type'] == 'NOT' : return eval_not(expr)
-        elif expr['type'] == 'EXEC' : return eval_exec(expr)
-        elif expr['type'] == 'WHILE' : eval_while(expr)
+        elif expr['type'] == 'AND'         : return eval_and(expr)
+        elif expr['type'] == 'OR'          : return eval_or(expr)
+        elif expr['type'] == 'NOT'         : return eval_not(expr)
+        elif expr['type'] == 'EXEC'        : return eval_exec(expr)
+        elif expr['type'] == 'WHILE'       : eval_while(expr)
         else: return expr
     
     return eval_expr(tree)
 
 def load(path):
-    
+    """ Load file, add function and definitions, execute main """
     content = open(path).read()
     tokens = lexical_analisys(content)
     tree = syntactic_tree(tokens)
-    parse(tree, {})
+    interpret(tree, {})
 
 load(path)
