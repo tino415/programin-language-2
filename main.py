@@ -11,7 +11,7 @@ done in infix and contain no complex constructs,
     ./main.py file_path
 """
 
-fil = argv[1]
+path = argv[1]
 functions = {}
 globvars = {}
 
@@ -206,23 +206,22 @@ def parse(tree, loca_vars):
             local[arg] = expr['params'][i]
             i += 1
 
-        return interpret(
-            func_name,
+        return parse(
+            functions[funce_name]['body'],
             local
         )
-    
-    def eval_if(expr):
-        condition = eval_expr(expr['args'][0])
-        
-        if condition['value'] not in [None, "0", 0]:
-            return eval_expr(expr['args'][1])
-        else: return eval_expr(expr['args'][2])
     
     def true(expr):
         if expr['value'] in [None, "0", 0]:
             return False
         else: return True
 
+    def eval_if(expr):
+        condition = eval_expr(expr['args'][0])
+        
+        if true(condition['value']):
+            return eval_expr(expr['args'][1])
+        else: return eval_expr(expr['args'][2])
 
     def eval_equals(expr):
         args = eval_list(expr['args'])
@@ -323,10 +322,6 @@ def parse(tree, loca_vars):
     
     return eval_expr(tree)
 
-def interpret(func_name, params):
-    
-    return parse(functions[func_name]['body'], params)
-
 def load(path):
     
     content = open(path).read()
@@ -334,4 +329,4 @@ def load(path):
     tree = syntactic_tree(tokens)
     parse(tree, {})
 
-load(fil)
+load(path)
