@@ -1,0 +1,56 @@
+PRINT "Loading lib.non"
+
+DEF s3um par1 par2 par3 {
+    LET tmp SUM par1 par2
+    RET SUM tmp par3
+}
+
+# Tests if statement
+DEF testIf {
+    PRINT "Write 4"
+    INPUT tmp
+    IF EQ tmp 4 {
+        PRINT "Good boy"
+    }{
+        PRINT "Not right"
+    }
+}
+
+# Test while statemen
+DEF testWhile {
+    LET tmp 0
+    WHILE NOT EQ tmp 4 {
+        PRINT "Write 4"
+        INPUT tmp
+    }
+    PRINT "You did it!!"
+}
+
+DEF for_a_down_to_b a b code {
+    WHILE NOT EQ a b {
+        EXEC code
+        LET a SUB a 1
+    }
+}
+
+DEF for_a_up_to_b a b code {
+    WHILE NOT EQ a b {
+        EXEC code
+        LET a SUM a 1
+    }
+}
+
+DEF for_a_to_b a b code {
+    IF GR a b {
+        LET min b
+        LET max a
+    } {
+        LET min a
+        LET max b
+    }
+
+    WHILE NOT EQ min max {
+        EXEC code
+        LET min SUM min 1
+    }
+}

@@ -44,10 +44,13 @@ def lexical_analisys(content):
         Token('PRINT', 'PRINT'),
         Token('INPUT', 'INPUT'),
         Token('EQUALS', 'EQ'),
+        Token('GREATER', 'GR'),
+        Token('GREATERTHEN', 'GT'),
         Token('CALL' , 'CALL'),
         Token('CONCAT', 'CONCAT'),
         Token('DEF', 'DEF'),
         Token('SUM', 'SUM'),
+        Token('SUB', 'SUB'),
         Token('IF', 'IF'),
         Token('RETURN', 'RET'),
         Token('EXPORT', 'EXPR'),
@@ -57,6 +60,8 @@ def lexical_analisys(content):
         Token('OR', 'OR'),
         Token('NOT', 'NOT'),
         Token('LOAD', 'LOAD'),
+        Token('CODE', 'CODE'),
+        Token('EXEC', 'EXEC'),
         Token('LBRAC', '\('),
         Token('RBRAC', '\)'),
         Token('STRING', '"([^"]*)"', 1),
@@ -136,6 +141,7 @@ def syntactic_tree(tokens):
     def build_branch(token):
         if token == 'ASSIGN': return build_wargs(token,2)
         elif token == 'SUM' : return build_wargs(token,2)
+        elif token == 'SUB' : return build_wargs(token,2)
         elif token == 'AND' : return build_wargs(token,2)
         elif token == 'OR' : return build_wargs(token,2)
         elif token == 'PRINT': return build_wargs(token,1)
@@ -152,8 +158,12 @@ def syntactic_tree(tokens):
         elif token == 'NOT' : return build_wargs(token, 1)
         elif token == 'WHILE' : return build_wargs(token, 2)
         elif token == 'EQUALS' : return build_wargs(token, 2)
+        elif token == 'GREATER' : return build_wargs(token, 2)
+        elif token == 'GREATERTHEN' : return build_wargs(token, 2)
         elif token == 'DEF' : build_def()
         elif token == 'CALL' : return build_call()
+        elif token == 'CODE' : return build_wargs(token, 1)
+        elif token == 'EXEC' : return build_wargs(token, 1)
         elif token == 'LOAD' : return build_wargs(token, 1)
         else: print('UNKNOWN', token)
     
@@ -178,6 +188,13 @@ def parse(tree, loca_vars):
         return {
             'type' : 'NUMBER',
             'value' : int(args[0]['value']) + int(args[1]['value'])
+        }
+
+    def eval_sub(expr):
+        args = eval_list(expr['args'])
+        return {
+            'type' : 'NUMBER',
+            'value' : int(args[0]['value']) - int(args[1]['value'])
         }
     
     def eval_concat(expr):
@@ -207,7 +224,7 @@ def parse(tree, loca_vars):
             i += 1
 
         return parse(
-            functions[funce_name]['body'],
+            functions[func_name]['body'],
             local
         )
     
@@ -219,7 +236,7 @@ def parse(tree, loca_vars):
     def eval_if(expr):
         condition = eval_expr(expr['args'][0])
         
-        if true(condition['value']):
+        if true(condition):
             return eval_expr(expr['args'][1])
         else: return eval_expr(expr['args'][2])
 
@@ -227,6 +244,32 @@ def parse(tree, loca_vars):
         args = eval_list(expr['args'])
 
         if str(args[0]['value']) == str(args[1]['value']):
+            return {
+                'type' : 'NUMBER',
+                'value' : "1"
+            }
+        else: return {
+                'type' : 'NUMBER',
+                'value' : "0"
+            }
+
+    def eval_greater(expr):
+        args = eval_list(expr['args'])
+
+        if int(args[0]['value']) > int(args[1]['value']):
+            return {
+                'type' : 'NUMBER',
+                'value' : "1"
+            }
+        else: return {
+                'type' : 'NUMBER',
+                'value' : "0"
+            }
+
+    def eval_greaterthen(expr):
+        args = eval_list(expr['args'])
+
+        if int(args[0]['value']) >= int(args[1]['value']):
             return {
                 'type' : 'NUMBER',
                 'value' : "1"
@@ -295,6 +338,10 @@ def parse(tree, loca_vars):
             'value' : input()
         }
     
+    def eval_exec(expr):
+        code = eval_expr(expr['args'][0])
+        return eval_expr(code['args'][0])
+    
     def eval_while(expr):
         while true(eval_expr(expr['args'][0])):
             eval_expr(expr['args'][1])
@@ -303,6 +350,7 @@ def parse(tree, loca_vars):
     def eval_expr(expr):
         if expr['type'] == 'BLOCK': return eval_block(expr)
         elif expr['type'] == 'SUM': return eval_sum(expr)
+        elif expr['type'] == 'SUB' : return eval_sub(expr)
         elif expr['type'] == 'ASSIGN' : return eval_assign(expr)
         elif expr['type'] == 'NAME' : return eval_get(expr)
         elif expr['type'] == 'CALL' : return eval_call(expr)
@@ -314,9 +362,12 @@ def parse(tree, loca_vars):
         elif expr['type'] == 'EXPORT' : return eval_export(expr)
         elif expr['type'] == 'INPUT' : return eval_input(expr)
         elif expr['type'] == 'EQUALS' : return eval_equals(expr)
+        elif expr['type'] == 'GREATER' : return eval_greater(expr)
+        elif expr['type'] == 'GREATERTHEN' : return eval_greaterthen(expr)
         elif expr['type'] == 'AND' : return eval_and(expr)
         elif expr['type'] == 'OR' : return eval_or(expr)
         elif expr['type'] == 'NOT' : return eval_not(expr)
+        elif expr['type'] == 'EXEC' : return eval_exec(expr)
         elif expr['type'] == 'WHILE' : eval_while(expr)
         else: return expr
     
