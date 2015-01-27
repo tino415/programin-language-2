@@ -20,11 +20,10 @@ def lexical_analisys(content):
 
     class Token:
         """ Class representing one token """
-        def __init__(self, name, pattern, value = None, clear = 0):
+        def __init__(self, name, pattern, value = None):
             self.name = name
             self.pattern = compile(pattern)
             self.value = value
-            self.clear = 0
         def match(self, content): return self.pattern.match(content)
     
     def tokenize(token_defs, content):
@@ -39,7 +38,7 @@ def lexical_analisys(content):
                         if token.value != None:
                             tokens.append(match.group(token.value))
 
-                    content = content[len(match.group(token.clear)):]
+                    content = content[len(match.group(0)):]
                     matched = True
                     break
 
