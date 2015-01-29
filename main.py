@@ -170,7 +170,12 @@ def build_tree(tokens):
             tokens.pop(0)
             tok['false'] = build_branch()
         return tok
-
+    
+    def build_load(token):
+        return {
+            'type' : token,
+            'body' : load(build_param(tokens.pop(0))['value'])
+        }
 
 
     def build_param(token):
@@ -179,11 +184,12 @@ def build_tree(tokens):
         elif token in [
             'PRINT', 'EXPORT', 'IMPORT',
             'RETURN','NOT','CODE', 'INPUT',
-            'EXEC', 'LOAD' ]        : return build_wargs(token, 1)
+            'EXEC']     : return build_wargs(token, 1)
         elif token == 'START_BLOCK' : return build_block(token)
         elif token == 'IF'          : return build_if(token)
         elif token == 'WHILE'       : return build_wargs(token, 2)
         elif token == 'DEF'         : return build_def(token)
+        elif token == 'LOAD'        : return build_load(token)
         elif token == 'CALL'        : return build_call(token)
         elif token == 'ILN'         : return {'type' : 'ILN'}
         else: print('UNKNOWN TOKEN', token)
@@ -364,7 +370,7 @@ def interpret(tree, loca_vars):
         return return_logic(not true(arg))
     
     def eval_load(expr):
-        load(expr['args'][0]['value'])
+        interpret(expr['body'], {})
     
     def eval_export(expr):
         name = expr['args'][0]['value']
@@ -428,7 +434,7 @@ def load(path):
     """ Load file, add function and definitions, execute main """
     content = open(path).read()
     tokens = lexical_analisys(content)
-    tokens = build_tree(tokens)
-    interpret(tokens, {})
+    return build_tree(tokens)
 
-load(path)
+tree = load(path)
+interpret(tree, {})
