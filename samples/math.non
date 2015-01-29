@@ -1,0 +1,12 @@
+DEF test par1 par2 {
+    RET par1 + par2
+}
+
+PRINT CALL test (5 + 4 3 + 3)
+PRINT CALL test (CALL test (3 + 4 1) 2 + 2)
+INPUT test
+# Solve brackets, when conditions in in brackets, error
+WHILE NOT test == 7 {
+    PRINT test
+    INPUT test
+}

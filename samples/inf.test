@@ -1,0 +1,9 @@
+DEF sum par1 par2 par3 {
+    RET par1 + par2 + par3
+}
+
+c = CALL sum (2 3*(2+1) 5)
+PRINT c
+
+c = (1 + 2) * 3
+PRINT c

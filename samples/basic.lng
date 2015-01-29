@@ -1,0 +1,5 @@
+i = 0
+WHILE NOT (i == 3) {
+    PRINT "Zadaj 3"
+    INPUT i
+}

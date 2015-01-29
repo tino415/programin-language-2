@@ -1,19 +1,21 @@
-LOAD "lib.non"
+LOAD 'lib.non'
 
-LET A 5
-LET B 4
-LET C SUM A B
-PRINT "Wtf is this"
+A = 5
+B = 4
+C = A + B
+PRINT 'Wtf is this'
 PRINT C
 
 DEF greetings name {
-    PRINT CONCAT "Hello " name
+    PRINT 'Hello ' CONCAT name
 }
 
-CALL greetings ("Martin")
-PRINT CONCAT "Sum is " CALL s3um (1 1 1)
+CALL greetings ('Martin')
+PRINT 'Sum is ' CONCAT CALL s3um (1 1 1)
+
 CALL testIf()
-PRINT "Testign while:"
+
+PRINT 'Testign while:'
 CALL testWhile()
 CALL for_a_up_to_b (1 7 CODE {
     PRINT a
@@ -23,7 +25,7 @@ CALL for_a_down_to_b(7 1 CODE {
     PRINT a
 })
 
-PRINT "a to b"
+PRINT 'a to b'
 CALL for_a_to_b(4 9 CODE {
     PRINT min
 })

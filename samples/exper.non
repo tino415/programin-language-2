@@ -1,0 +1,3 @@
+PRINT ? (a = ILN) == 3 'Je to 3' : {
+    PRINT a RET 'Nieje to 3'
+}
