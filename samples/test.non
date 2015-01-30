@@ -7,10 +7,10 @@ PRINT 'Wtf is this'
 PRINT C
 
 DEF greetings name
-    PRINT 'Hello ' CONCAT name
+    PRINT "Hello $name"
 
 greetings 'Martin'
-PRINT 'Sum is ' CONCAT s3um 1 1 1
+PRINT 'Sum is '.s3um 1 1 1
 
 testIf
 

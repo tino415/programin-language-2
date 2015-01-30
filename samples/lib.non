@@ -38,7 +38,6 @@ DEF for_a_to_b a b stat
     if a > b
         min = b
         max = a
-        PRINT 'Min ' CONCAT min
     ELSE
         min = a
         max = b

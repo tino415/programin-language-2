@@ -30,40 +30,60 @@ def lexical_analisys(content):
         def match(self, content): return self.pattern.match(content)
     
 
-    def tokenize(token_defs, content):
+    def escape(token, match):
+        tokens.append(token.name)
+        if token.name == 'STAT':
+            tokenize(token_defs, match.group(1), statement)
+        else:
+            tokens.append(match.group(0))
+        matched = True
 
-        indentation = 0
+    def statement(token, match):
+        if token.name == 'INDENT':
+
+            act_indent = int(len(match.group(0))/4)
+
+            while act_indent > statement.indentation:
+                statement.indentation += 1
+                tokens.append('START_BLOCK')
+
+            while act_indent < statement.indentation:
+                statement.indentation -= 1
+                tokens.append('END_BLOCK')
+        elif token.name == 'UNESC_STRING':
+            tokens.append(token.name)
+            tokenize(escape_token_defs, match.group(1), escape)
+
+        elif token.name != 'IGNORE':
+            tokens.append(token.name)
+            if token.value != None:
+                tokens.append(match.group(token.value))
+
+    statement.indentation = 0
+
+                        
+        
+    def tokenize(token_defs, content, context):
 
         matched = True
 
-        while len(content) > 0:
-            if not matched:
-                print("Unmatched content:\n", content)
-                break
+        while len(content) > 0 and matched:
+            
             matched = False
+
             for token in token_defs:
                 match = token.match(content)
-                if match:
-                    if token.name == 'INDENT':
-
-                        act_indent = int(len(match.group(0))/4)
-
-                        while act_indent > indentation:
-                            indentation += 1
-                            tokens.append('START_BLOCK')
-
-                        while act_indent < indentation:
-                            indentation -= 1
-                            tokens.append('END_BLOCK')
-
-                    elif token.name != 'IGNORE':
-                        tokens.append(token.name)
-                        if token.value != None:
-                            tokens.append(match.group(token.value))
-
-                    content = content[len(match.group(0)):]
+                if match: 
+                    context(token, match)
                     matched = True
+                    content = content[len(match.group(0)):]
                     break
+
+
+    escape_token_defs = {
+        Token('TEXT', '([^$\\\\]|(\\\\\$|\\\\))+'),
+        Token('STAT', '\\$([^ ]+)') # Single word statement
+    }
 
     token_defs = [
         # Operands
@@ -77,7 +97,7 @@ def lexical_analisys(content):
         Token('MUL'         , '\\*'            ),
         Token('SUB'         , '-'              ),
         Token('SQR'         , '\\^'            ),
-        Token('CONCAT'      , 'CONCAT'         ),
+        Token('CONCAT'      , '\\.'        ),
         
         # Keywords
         Token('IF'          , '(\\?|if|IF)'    ),
@@ -111,11 +131,14 @@ def lexical_analisys(content):
         Token('STRING' , "'(([^']*(\\\\')?)*[^\\\\])'" , 1),
         Token('NUMBER' , '(0|[1-9][0-9]*)'             , 0),
         Token('NAME'   , '[a-zA-Z][a-zA-Z0-9_]*'       , 0),
+
+        # Tokens that are scanned
+        Token('UNESC_STRING' , '"(([^"]*(\\\\")?)*[^\\\\])"' , 1),
     ]
 
     tokens = ['START_BLOCK']
 
-    tokenize(token_defs, content)
+    tokenize(token_defs, content, statement)
 
     tokens.append('END_BLOCK')
 
@@ -205,6 +228,25 @@ def build_tree(tokens):
             'type' : token,
             'body' : load(build_param(tokens.pop(0))['value'])
         }
+    
+    def build_unescaped_string(token):
+        body = []
+        while tokens[0] in ['TEXT', 'STAT']:
+            tok = tokens.pop(0)
+            if tok == 'TEXT':
+                body.append({
+                    'type' : 'TEXT',
+                    'value' : tokens.pop(0)
+                })
+            elif tok == 'STAT':
+                body.append({
+                    'type' : 'STAT',
+                    'value' : build_branch()
+                })
+        return {
+            'type' : token,
+            'body' : body
+        }
 
 
     def build_param(token):
@@ -220,6 +262,7 @@ def build_tree(tokens):
         elif token == 'WHILE'       : return build_wargs(token, 2)
         elif token == 'DEF'         : return build_def(token)
         elif token == 'LOAD'        : return build_load(token)
+        elif token == 'UNESC_STRING': return build_unescaped_string(token)
         elif token == 'ILN'         : return {'type' : 'ILN'}
         else: print('UNKNOWN TOKEN', token)
 
@@ -424,6 +467,21 @@ def interpret(tree, loca_vars):
     def eval_while(expr):
         while true(eval_expr(expr['args'][0])):
             eval_expr(expr['args'][1])
+    
+    def eval_unescaped_string(expr):
+        
+        ret = ''
+        
+        for piece in expr['body']:
+            if piece['type'] == 'TEXT':
+                ret += piece['value']
+            else:
+                ret += eval_expr(piece['value'])['value']
+
+        return {
+            'type' : 'STRING',
+            'value' : ret
+        }
 
     def eval_expr(expr):
         if expr['type'] == 'BLOCK'         : return eval_block(expr)
@@ -448,6 +506,7 @@ def interpret(tree, loca_vars):
         elif expr['type'] == 'OR'          : return eval_or(expr)
         elif expr['type'] == 'NOT'         : return eval_not(expr)
         elif expr['type'] == 'EXEC'        : return eval_exec(expr)
+        elif expr['type'] == 'UNESC_STRING': return eval_unescaped_string(expr)
         elif expr['type'] == 'WHILE'       : eval_while(expr)
         else: return expr
     
