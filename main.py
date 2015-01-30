@@ -64,7 +64,6 @@ def lexical_analisys(content):
         Token('PRINT'       , 'PRINT'          ),
         Token('ILN'         , 'ILN'            ),
         Token('INPUT'       , 'INPUT'          ),
-        Token('CALL'        , 'CALL'           ),
         Token('RETURN'      , 'RET'            ),
         Token('EXPORT'      , 'EXPR'           ),
         Token('IMPORT'      , 'IMPRT'          ),
@@ -149,14 +148,9 @@ def build_tree(tokens):
         }
     
     def build_call(token):
-        tokens.pop(0)
-        tok = {'type' : token, 'name' : tokens.pop(0), 'params' : []}
-        if tokens[0] == 'LBRAC':
-            tokens.pop(0)
-            while tokens[0] != 'RBRAC':
-                tok['params'].append(build_branch())
-
-        tokens.pop(0)
+        tok = {'type' : 'CALL', 'name' : tokens.pop(0), 'params' : {}}
+        for arg in functions[tok['name']]['args']:
+            tok['params'][arg] = build_branch()
         return tok
     
     def build_if(token):
@@ -171,6 +165,12 @@ def build_tree(tokens):
             tok['false'] = build_branch()
         return tok
     
+    def build_name(token):
+        if tokens[0] in functions:
+            return build_call(token)
+        else:
+            return build_value(token)
+    
     def build_load(token):
         return {
             'type' : token,
@@ -179,18 +179,18 @@ def build_tree(tokens):
 
 
     def build_param(token):
-        if token in ['NAME', 'STRING', 'NUMBER']:
+        if token in ['STRING', 'NUMBER']:
             return build_value(token)
         elif token in [
             'PRINT', 'EXPORT', 'IMPORT',
             'RETURN','NOT','CODE', 'INPUT',
             'EXEC']     : return build_wargs(token, 1)
+        elif token == 'NAME'        : return build_name(token)
         elif token == 'START_BLOCK' : return build_block(token)
         elif token == 'IF'          : return build_if(token)
         elif token == 'WHILE'       : return build_wargs(token, 2)
         elif token == 'DEF'         : return build_def(token)
         elif token == 'LOAD'        : return build_load(token)
-        elif token == 'CALL'        : return build_call(token)
         elif token == 'ILN'         : return {'type' : 'ILN'}
         else: print('UNKNOWN TOKEN', token)
 
@@ -301,16 +301,10 @@ def interpret(tree, loca_vars):
     
     def eval_call(expr):
         func_name = expr['name']
-        args = functions[func_name]['args']
-        local = {}
-        i = 0
-        for arg in args:
-            local[arg] = eval_expr(expr['params'][i])
-            i += 1
 
         return interpret(
             functions[func_name]['body'],
-            local
+            expr['params']
         )
     
     def true(expr):

@@ -10,22 +10,22 @@ DEF greetings name {
     PRINT 'Hello ' CONCAT name
 }
 
-CALL greetings ('Martin')
-PRINT 'Sum is ' CONCAT CALL s3um (1 1 1)
+greetings 'Martin'
+PRINT 'Sum is ' CONCAT s3um 1 1 1
 
-CALL testIf()
+testIf
 
 PRINT 'Testign while:'
-CALL testWhile()
-CALL for_a_up_to_b (1 7 CODE {
+testWhile
+for_a_up_to_b 1 7 CODE {
     PRINT a
-})
+}
 
-CALL for_a_down_to_b(7 1 CODE {
+for_a_down_to_b 7 1 CODE {
     PRINT a
-})
+}
 
 PRINT 'a to b'
-CALL for_a_to_b(4 9 CODE {
+for_a_to_b 4 9 CODE {
     PRINT min
-})
+}

@@ -1,2 +1,5 @@
-PRINT "Hello world"
-PRINT 3 + 4 * 2
+DEF test jou{
+    PRINT 'This is test function'
+}
+
+test 'Jota'
