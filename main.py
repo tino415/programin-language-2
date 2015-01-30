@@ -58,7 +58,7 @@ def lexical_analisys(content):
         Token('CONCAT'      , 'CONCAT'         ),
         
         # Keywords
-        Token('IF'          , '\\?'            ),
+        Token('IF'          , '(\\?|if|IF)'    ),
         Token('ELSE'        , '(else|ELSE|\\:)'),
         Token('DEF'         , '(def|DEF)'      ),
         Token('PRINT'       , '(print|PRINT)'  ),
