@@ -97,7 +97,7 @@ def lexical_analisys(content):
         Token('MUL'         , '\\*'            ),
         Token('SUB'         , '-'              ),
         Token('SQR'         , '\\^'            ),
-        Token('CONCAT'      , '\\.'        ),
+        Token('CONCAT'      , '\\.'            ),
         
         # Keywords
         Token('IF'          , '(\\?|if|IF)'    ),

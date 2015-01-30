@@ -1,0 +1,6 @@
+* Ranges
+* Unevulated arguments
+* Lmabdas
+* Arrays
+
+* OOP

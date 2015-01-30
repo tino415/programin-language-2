@@ -7,22 +7,16 @@ DEF s3um par1 par2 par3
 # Tests if statement
 DEF testIf
     PRINT 'Write 4'
-    INPUT tmp
-    ? tmp == 4 
-        PRINT 'Good boy'
-    else
-        PRINT 'Not right'
+    PRINT ? ILN == 4 'Good boy' : 'Not right'
 
 
 # Test while statemen
 DEF testWhile
-    tmp = 0
-    WHILE NOT tmp == 4
-        PRINT 'Write 4'
-        INPUT tmp
+    PRINT 'Write 4'
+    WHILE ! ILN == 4 PRINT 'Write 4'
     PRINT 'You did it!!'
 
-DEF for_a_down_to_b a b stat 
+DEF for_a_down_to_b a b stat
     WHILE NOT a == b
         EXEC stat
         a = a - 1
