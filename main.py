@@ -96,11 +96,16 @@ def lexical_analisys(content):
         Token('EXEC'        , '(exec|EXEC)'    ),
         Token('LBRAC'       , '\\('            ),
         Token('RBRAC'       , '\\)'            ),
-        Token('INDENT'      , '\n(( {4})*)'  ),
 
         # Ignored tokens
-        Token('IGNORE'      , '#\\{[^\\}]*\\}'    ), # Multiline
-        Token('IGNORE'      , '([ \n]+|#[^\n]*\n)'), # Single line and spaces
+        Token('IGNORE'      , '#\\{[^\\}]*\\}'    ), # Multiline comment
+        Token('IGNORE'      , '(#[^\n]*\n)'       ), # Single line comment
+
+        # Indent, must by behind one liner comment, to not indednting them
+        Token('INDENT'      , '\n(( {4})*)'  ),
+
+        # Ignore spaces, must by behind indent
+        Token('IGNORE'      , ' +'),
 
         # Token with values
         Token('STRING' , "'(([^']*(\\\\')?)*[^\\\\])'" , 1),
