@@ -1,6 +1,6 @@
 * Ranges
-* Unevulated arguments
-* Lmabdas
+* Unevaluated arguments
+* Lambdas
 * Arrays
 
 * OOP
