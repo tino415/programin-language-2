@@ -76,12 +76,15 @@ def lexical_analisys(content):
         Token('RBRAC'       , '\\)'            ),
         Token('START_BLOCK' , '\\{'            ),
         Token('END_BLOCK'   , '\\}'            ),
-        Token('IGNORE'      , '([ \n]+|#[^\n]*\n)'),
+
+        # Ignored tokens
+        Token('IGNORE'      , '#\\{[^\\}]*\\}'    ), # Multiline
+        Token('IGNORE'      , '([ \n]+|#[^\n]*\n)'), # Single line and spaces
 
         # Token with values
-        Token('STRING'      , "'([^']*)'"             , 1),
-        Token('NUMBER'      , '(0|[1-9][0-9]*)'       , 0),
-        Token('NAME'        , '[a-zA-Z][a-zA-Z0-9_]*' , 0),
+        Token('STRING' , "'(([^']*(\\\\')?)*[^\\\\])'" , 1),
+        Token('NUMBER' , '(0|[1-9][0-9]*)'             , 0),
+        Token('NAME'   , '[a-zA-Z][a-zA-Z0-9_]*'       , 0),
     ]
 
     tokens = ['START_BLOCK']
