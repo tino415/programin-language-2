@@ -1,0 +1,12 @@
+# One line comment
+PRINT 5 + 4
+#{
+This is multiline comment
+that will by ignored
+}
+PRINT 'Endf'
+
+def testDef name
+    print 'Indentation function'
+
+testDef 'Jouj'
