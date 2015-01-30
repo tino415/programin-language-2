@@ -6,9 +6,8 @@ C = A + B
 PRINT 'Wtf is this'
 PRINT C
 
-DEF greetings name {
+DEF greetings name
     PRINT 'Hello ' CONCAT name
-}
 
 greetings 'Martin'
 PRINT 'Sum is ' CONCAT s3um 1 1 1
@@ -17,15 +16,12 @@ testIf
 
 PRINT 'Testign while:'
 testWhile
-for_a_up_to_b 1 7 CODE {
+for_a_up_to_b 1 7 CODE
     PRINT a
-}
 
-for_a_down_to_b 7 1 CODE {
+for_a_down_to_b 7 1 CODE
     PRINT a
-}
 
 PRINT 'a to b'
-for_a_to_b 4 9 CODE {
+for_a_to_b 4 9 CODE
     PRINT min
-}

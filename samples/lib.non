@@ -1,56 +1,48 @@
 PRINT 'Loading lib.non'
 
-DEF s3um par1 par2 par3 {
+DEF s3um par1 par2 par3
     tmp = par1 + par2
     RET tmp + par3
-}
 
 # Tests if statement
-DEF testIf {
+DEF testIf
     PRINT 'Write 4'
     INPUT tmp
-    ? tmp == 4 {
+    ? tmp == 4 
         PRINT 'Good boy'
-    }{
+    else
         PRINT 'Not right'
-    }
-}
+
 
 # Test while statemen
-DEF testWhile {
+DEF testWhile
     tmp = 0
-    WHILE NOT tmp == 4 {
+    WHILE NOT tmp == 4
         PRINT 'Write 4'
         INPUT tmp
-    }
     PRINT 'You did it!!'
-}
 
-DEF for_a_down_to_b a b code {
-    WHILE NOT a == b {
-        EXEC code
+DEF for_a_down_to_b a b stat 
+    WHILE NOT a == b
+        EXEC stat
         a = a - 1
-    }
-}
 
-DEF for_a_up_to_b a b code {
-    WHILE NOT a == b {
-        EXEC code
+DEF for_a_up_to_b a b stat
+    PRINT 'In for'
+    WHILE NOT a == b
+        EXEC stat
         a = a + 1
-    }
-}
 
-DEF for_a_to_b a b code {
-    ? a > b {
+DEF for_a_to_b a b stat
+    PRINT 'STrat'
+    if a > b
         min = b
         max = a
-    } ELSE {
+        PRINT 'Min ' CONCAT min
+    ELSE
         min = a
         max = b
-    }
-
-    WHILE NOT min == max {
-        EXEC code
+    
+    WHILE NOT min == max
+        EXEC stat
         min =  min + 1
-    }
-}

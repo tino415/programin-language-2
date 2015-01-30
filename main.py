@@ -5,6 +5,8 @@ from re import compile
 from ntpath import basename
 from pprint import pprint
 
+INDENT_SIZE = 4
+
 """
 As simple as possible complete programming language interpreter, all calls are 
 done in infix and contain no complex constructs,
@@ -27,14 +29,34 @@ def lexical_analisys(content):
             self.value = value
         def match(self, content): return self.pattern.match(content)
     
+
     def tokenize(token_defs, content):
+
+        indentation = 0
+
         matched = True
-        while len(content) > 0 and matched:
+
+        while len(content) > 0:
+            if not matched:
+                print("Unmatched content:\n", content)
+                break
             matched = False
             for token in token_defs:
                 match = token.match(content)
                 if match:
-                    if token.name != 'IGNORE':
+                    if token.name == 'INDENT':
+
+                        act_indent = int(len(match.group(0))/4)
+
+                        while act_indent > indentation:
+                            indentation += 1
+                            tokens.append('START_BLOCK')
+
+                        while act_indent < indentation:
+                            indentation -= 1
+                            tokens.append('END_BLOCK')
+
+                    elif token.name != 'IGNORE':
                         tokens.append(token.name)
                         if token.value != None:
                             tokens.append(match.group(token.value))
@@ -74,8 +96,7 @@ def lexical_analisys(content):
         Token('EXEC'        , '(exec|EXEC)'    ),
         Token('LBRAC'       , '\\('            ),
         Token('RBRAC'       , '\\)'            ),
-        Token('START_BLOCK' , '\\{'            ),
-        Token('END_BLOCK'   , '\\}'            ),
+        Token('INDENT'      , '\n(( {4})*)'  ),
 
         # Ignored tokens
         Token('IGNORE'      , '#\\{[^\\}]*\\}'    ), # Multiline
@@ -429,7 +450,7 @@ def interpret(tree, loca_vars):
 
 def load(path):
     """ Load file, add function and definitions, execute main """
-    content = open(path).read()
+    content = open(path).read() + "\n"
     tokens = lexical_analisys(content)
     return build_tree(tokens)
 
