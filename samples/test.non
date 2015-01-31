@@ -10,7 +10,7 @@ DEF greetings name
     PRINT "Hello $name"
 
 greetings 'Martin'
-PRINT 'Sum is '.s3um 1 1 1
+PRINT 'Sum is ' $ s3um 1 1 1
 
 testIf
 

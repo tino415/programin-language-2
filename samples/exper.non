@@ -1,3 +1,10 @@
-PRINT ? (a = ILN) == 3 'Je to 3' : {
-    PRINT a RET 'Nieje to 3'
-}
+LOAD 'lib2.non'
+LOAD 'packg/lib3.non'
+
+var = 1
+# Print local variable
+PRINT var
+# Print global
+PRINT lib2\test
+# Print global in pkg
+PRINT packg\lib3\fpkg

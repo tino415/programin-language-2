@@ -6,6 +6,7 @@ from ntpath import basename
 from pprint import pprint
 
 INDENT_SIZE = 4
+EXTENSION_SIZE = 4
 
 """
 As simple as possible complete programming language interpreter, all calls are 
@@ -15,6 +16,7 @@ done in infix and contain no complex constructs,
 """
 
 path = argv[1]
+scobe = ['START']
 functions = {}
 globvars = {}
 
@@ -37,6 +39,11 @@ def lexical_analisys(content):
         else:
             tokens.append(match.group(0))
         matched = True
+    
+    def term(token, match):
+        tokens.append(token.name)
+        if token.name == 'NAME':
+            tokens.append(match.group(token.value))
 
     def statement(token, match):
         if token.name == 'INDENT':
@@ -53,7 +60,9 @@ def lexical_analisys(content):
         elif token.name == 'UNESC_STRING':
             tokens.append(token.name)
             tokenize(escape_token_defs, match.group(1), escape)
-
+        elif token.name == 'TERM':
+            tokens.append(token.name)
+            tokenize(term_token_defs, match.group(0), term)
         elif token.name != 'IGNORE':
             tokens.append(token.name)
             if token.value != None:
@@ -85,6 +94,11 @@ def lexical_analisys(content):
         Token('STAT', '\\$([^ ]+)') # Single word statement
     }
 
+    term_token_defs = {
+        Token('DELIMITER', '\\\\'),
+        Token('NAME'   , '([a-zA-Z][a-zA-Z0-9_]*|\\.)'     , 0),
+    }
+
     token_defs = [
         # Operands
         Token('EQUALS'      , '=='             ),
@@ -97,7 +111,7 @@ def lexical_analisys(content):
         Token('MUL'         , '\\*'            ),
         Token('SUB'         , '-'              ),
         Token('SQR'         , '\\^'            ),
-        Token('CONCAT'      , '\\.'            ),
+        Token('CONCAT'      , '\\$'            ),
         
         # Keywords
         Token('IF'          , '(\\?|if|IF)'    ),
@@ -107,8 +121,6 @@ def lexical_analisys(content):
         Token('ILN'         , 'ILN'            ),
         Token('INPUT'       , '(input|INPUT)'  ),
         Token('RETURN'      , '(ret|RET)'      ),
-        Token('EXPORT'      , '(expr|EXPR)'    ),
-        Token('IMPORT'      , '(imprt|IMPRT)'  ),
         Token('WHILE'       , '(while|WHILE)'  ),
         Token('NOT'         , '(not|NOT|\\!)'  ),
         Token('LOAD'        , '(load|LOAD)'    ),
@@ -130,7 +142,7 @@ def lexical_analisys(content):
         # Token with values
         Token('STRING' , "'(([^']*(\\\\')?)*[^\\\\])'" , 1),
         Token('NUMBER' , '(0|[1-9][0-9]*)'             , 0),
-        Token('NAME'   , '[a-zA-Z][a-zA-Z0-9_]*'       , 0),
+        Token('TERM'   , '[a-zA-Z0-9_\\\\]+'           , 0),
 
         # Tokens that are scanned
         Token('UNESC_STRING' , '"(([^"]*(\\\\")?)*[^\\\\])"' , 1),
@@ -199,8 +211,8 @@ def build_tree(tokens):
             'body' : build_branch()
         }
     
-    def build_call(token):
-        tok = {'type' : 'CALL', 'name' : tokens.pop(0), 'params' : {}}
+    def build_call(name):
+        tok = {'type' : 'CALL', 'name' : name, 'params' : {}}
         for arg in functions[tok['name']]['args']:
             tok['params'][arg] = build_branch()
         return tok
@@ -217,11 +229,33 @@ def build_tree(tokens):
             tok['false'] = build_branch()
         return tok
     
-    def build_name(token):
-        if tokens[0] in functions:
-            return build_call(token)
+    def build_term(token):
+        """ Resolving namespacing """
+        pprint(scobe)
+        names = []
+
+        if tokens[0] == 'DELIMITER': typ = 'G_NAME'
+        else: typ = 'L_NAME'
+
+        while tokens[0] in ['NAME', 'DELIMITER']: 
+            if tokens.pop(0) == 'NAME':
+                names.append(tokens.pop(0))
+
+        if len(names) > 1:
+            name = '\\'.join(names)
+            typ = 'G_NAME'
+        elif typ == 'G_NAME':
+            name = '\\'.join(scobe) + '\\' + names[0]
+        else: name = names[0]
+            
+
+        if name in functions:
+            return build_call(name)
         else:
-            return build_value(token)
+            return {
+                'type' : typ ,
+                'value' : name
+            }
     
     def build_load(token):
         return {
@@ -256,7 +290,7 @@ def build_tree(tokens):
             'PRINT', 'EXPORT', 'IMPORT',
             'RETURN','NOT','CODE', 'INPUT',
             'EXEC']     : return build_wargs(token, 1)
-        elif token == 'NAME'        : return build_name(token)
+        elif token == 'TERM'        : return build_term(token)
         elif token == 'START_BLOCK' : return build_block(token)
         elif token == 'IF'          : return build_if(token)
         elif token == 'WHILE'       : return build_wargs(token, 2)
@@ -361,15 +395,20 @@ def interpret(tree, loca_vars):
     
     def eval_assign(expr):
         var_name = expr['args'][0]['value']
+        var_type = expr['args'][0]['type']
         value = eval_expr(expr['args'][1])
-        loca_vars[var_name] = eval_expr(value)
+        if var_type == 'L_NAME':
+            loca_vars[var_name] = eval_expr(value)
+        elif var_type == 'G_NAME':
+            globvars[var_name] = eval_expr(value)
         return value
     
     def eval_print(expr):
         print(eval_expr(expr['args'][0])['value'])
     
-    def eval_get(expr):
-        return loca_vars[expr['value']]
+    def eval_lget(expr): return loca_vars[expr['value']]
+    def eval_gget(expr): return globvars[expr['value']]
+
     
     def eval_call(expr):
         func_name = expr['name']
@@ -489,7 +528,8 @@ def interpret(tree, loca_vars):
         elif expr['type'] == 'SUB'         : return eval_sub(expr)
         elif expr['type'] == 'MUL'         : return eval_mul(expr)
         elif expr['type'] == 'ASSIGN'      : return eval_assign(expr)
-        elif expr['type'] == 'NAME'        : return eval_get(expr)
+        elif expr['type'] == 'L_NAME'      : return eval_lget(expr)
+        elif expr['type'] == 'G_NAME'      : return eval_gget(expr)
         elif expr['type'] == 'CALL'        : return eval_call(expr)
         elif expr['type'] == 'CONCAT'      : return eval_concat(expr)
         elif expr['type'] == 'LOAD'        : return eval_load(expr)
@@ -514,9 +554,12 @@ def interpret(tree, loca_vars):
 
 def load(path):
     """ Load file, add function and definitions, execute main """
+    scobe.append(path[0:-EXTENSION_SIZE].replace('/', '\\'))
     content = open(path).read() + "\n"
     tokens = lexical_analisys(content)
+    pprint(tokens)
     return build_tree(tokens)
 
 tree = load(path)
+pprint(tree)
 interpret(tree, {})
