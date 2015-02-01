@@ -9,9 +9,8 @@ INDENT_SIZE = 4
 EXTENSION_SIZE = 4
 
 """
-As simple as possible complete programming language interpreter, all calls are 
-done in infix and contain no complex constructs,
-    
+Experimental programming language 2 
+
     ./main.py file_path
 """
 
@@ -38,13 +37,12 @@ def lexical_analisys(content):
             tokenize(token_defs, match.group(1), statement)
         else:
             tokens.append(match.group(0))
-        matched = True
     
     def term(token, match):
         tokens.append(token.name)
         if token.name == 'NAME':
             tokens.append(match.group(token.value))
-
+    
     def statement(token, match):
         if token.name == 'INDENT':
 
@@ -57,6 +55,7 @@ def lexical_analisys(content):
             while act_indent < statement.indentation:
                 statement.indentation -= 1
                 tokens.append('END_BLOCK')
+
         elif token.name == 'UNESC_STRING':
             tokens.append(token.name)
             tokenize(escape_token_defs, match.group(1), escape)
@@ -76,28 +75,31 @@ def lexical_analisys(content):
 
         matched = True
 
-        while len(content) > 0 and matched:
-            
-            matched = False
+        while len(content) > 0:
+        
+            if not matched:
+                print("UNMATCHED CONTENT\n", content)
+                break
+            else: matched = False
 
             for token in token_defs:
                 match = token.match(content)
                 if match: 
                     context(token, match)
-                    matched = True
                     content = content[len(match.group(0)):]
+                    matched = True
                     break
 
 
-    escape_token_defs = {
+    escape_token_defs = [
         Token('TEXT', '([^$\\\\]|(\\\\\$|\\\\))+'),
-        Token('STAT', '\\$([^ ]+)') # Single word statement
-    }
+        Token('STAT', '\\$([^ $]+)') # Single word statement
+    ]
 
-    term_token_defs = {
+    term_token_defs = [
         Token('DELIMITER', '\\\\'),
-        Token('NAME'   , '([a-zA-Z][a-zA-Z0-9_]*|\\.)'     , 0),
-    }
+        Token('NAME'   , '[a-zA-Z][a-zA-Z0-9_]*'       , 0),
+    ]
 
     token_defs = [
         # Operands
@@ -166,6 +168,12 @@ def build_tree(tokens):
         elif name in ['AND', 'OR']: return 50
         elif name in ['ASSIGN']: return 40
         else: return 0
+    
+    def mpop(collection, count):
+        while count > 0:
+            collection.pop(0)
+            count -= 1
+        return collection.pop(0)
 
     def build_multiple(count):
         result = []
@@ -200,11 +208,9 @@ def build_tree(tokens):
 
     def build_def(token):
         args = []
-        tokens.pop(0)
-        name = tokens.pop(0)
-        while tokens[0] == 'NAME': 
-            tokens.pop(0)
-            args.append(tokens.pop(0))
+        name = mpop(tokens, 2)
+        while tokens[0] == 'TERM': 
+            args.append(mpop(tokens, 2))
 
         functions[name] = {
             'args' : args,
@@ -231,7 +237,6 @@ def build_tree(tokens):
     
     def build_term(token):
         """ Resolving namespacing """
-        pprint(scobe)
         names = []
 
         if tokens[0] == 'DELIMITER': typ = 'G_NAME'
@@ -284,7 +289,7 @@ def build_tree(tokens):
 
 
     def build_param(token):
-        if token in ['STRING', 'NUMBER']:
+        if token in ['STRING', 'NUMBER', 'NAME']:
             return build_value(token)
         elif token in [
             'PRINT', 'EXPORT', 'IMPORT',
@@ -407,7 +412,8 @@ def interpret(tree, loca_vars):
         print(eval_expr(expr['args'][0])['value'])
     
     def eval_lget(expr): return loca_vars[expr['value']]
-    def eval_gget(expr): return globvars[expr['value']]
+    def eval_gget(expr): 
+        return globvars[expr['value']]
 
     
     def eval_call(expr):
@@ -554,12 +560,11 @@ def interpret(tree, loca_vars):
 
 def load(path):
     """ Load file, add function and definitions, execute main """
+    scobe.pop()
     scobe.append(path[0:-EXTENSION_SIZE].replace('/', '\\'))
     content = open(path).read() + "\n"
     tokens = lexical_analisys(content)
-    pprint(tokens)
     return build_tree(tokens)
 
 tree = load(path)
-pprint(tree)
 interpret(tree, {})

@@ -1,5 +1,7 @@
 PRINT 'Loading lib.non'
 
+\glob_test = 'This is glob test'
+
 DEF s3um par1 par2 par3
     tmp = par1 + par2
     RET tmp + par3

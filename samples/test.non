@@ -1,5 +1,7 @@
 LOAD 'lib.non'
 
+print "Globtest $lib\glob_test"
+
 A = 5
 B = 4
 C = A + B
