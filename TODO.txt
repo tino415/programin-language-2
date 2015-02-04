@@ -1,3 +1,4 @@
+* Resolve mem hierarchy
 * Ranges
 * Unevaluated arguments
 * Lambdas
