@@ -43,7 +43,7 @@ Example:
 
 Variables are divided into local and global,
 
-To define gloval variable you have to assing value to it like:
+To define gloval variable you have to assign value to it like:
 
     \a = 3
 
@@ -82,5 +82,5 @@ Return one line from input, enables interesting construction like
 
     print ? (var = ILN) == 3 'You writed 3' : 'You dont wirted 3'
 
-This construction assigns one line from input to var, compare it to 3 and printed massage acording to it
+This construction assigns one line from input to var, compare it to 3 and printed message acording to it
 
