@@ -11,7 +11,6 @@ EXTENSION_SIZE = 4
 """
 Experimental programming language 2 
 
-    ./main.py file_path
 """
 
 path = argv[1]
@@ -20,7 +19,6 @@ functions = {}
 globvars = {}
 
 def lexical_analisys(content):
-    """ Transform stream of chars into tokens recursively """
 
     class Token:
         """ Class representing one token """
@@ -32,6 +30,7 @@ def lexical_analisys(content):
     
 
     def escape(token, match):
+        """ We are in unescaped string """
         tokens.append(token.name)
         if token.name == 'STAT':
             tokenize(token_defs, match.group(1), statement)
@@ -39,11 +38,13 @@ def lexical_analisys(content):
             tokens.append(match.group(0))
     
     def term(token, match):
+        """ We are in the term """
         tokens.append(token.name)
         if token.name == 'NAME':
             tokens.append(match.group(token.value))
     
     def statement(token, match):
+        """ Classis statement, probably in infix """
         if token.name == 'INDENT':
 
             act_indent = int(len(match.group(0))/4)
@@ -112,22 +113,22 @@ def lexical_analisys(content):
         Token('SUM'         , '\\+'            ),
         Token('MUL'         , '\\*'            ),
         Token('SUB'         , '-'              ),
-        Token('SQR'         , '\\^'            ),
+        Token('SQR'         , '\\^'            ), #TODO Not implemented in parser
         Token('CONCAT'      , '\\$'            ),
         
         # Keywords
-        Token('IF'          , '(\\?|if|IF)'    ),
-        Token('ELSE'        , '(else|ELSE|\\:)'),
-        Token('DEF'         , '(def|DEF)'      ),
-        Token('PRINT'       , '(print|PRINT)'  ),
-        Token('ILN'         , 'ILN'            ),
-        Token('INPUT'       , '(input|INPUT)'  ),
-        Token('RETURN'      , '(ret|RET)'      ),
-        Token('WHILE'       , '(while|WHILE)'  ),
-        Token('NOT'         , '(not|NOT|\\!)'  ),
-        Token('LOAD'        , '(load|LOAD)'    ),
-        Token('CODE'        , '(code|CODE)'    ),
-        Token('EXEC'        , '(exec|EXEC)'    ),
+        Token('IF'          , '(\\?|if|IF)'    ), # If statement
+        Token('ELSE'        , '(else|ELSE|\\:)'), # Else for if
+        Token('DEF'         , '(def|DEF)'      ), # Define function
+        Token('PRINT'       , '(print|PRINT)'  ), # Print result of next stat
+        Token('ILN'         , 'ILN'            ), # Return line from input
+        Token('INPUT'       , '(input|INPUT)'  ), # Assign input to variable
+        Token('RETURN'      , '(ret|RET)'      ), # Return result of block
+        Token('WHILE'       , '(while|WHILE)'  ), # While cycle
+        Token('NOT'         , '(not|NOT|\\!)'  ), # Negation
+        Token('LOAD'        , '(load|LOAD)'    ), # Load file
+        Token('CODE'        , '(code|CODE)'    ), # Return statement without eval
+        Token('EXEC'        , '(exec|EXEC)'    ), # Execute code in variable
         Token('LBRAC'       , '\\('            ),
         Token('RBRAC'       , '\\)'            ),
 
@@ -141,7 +142,7 @@ def lexical_analisys(content):
         # Ignore spaces, must by behind indent
         Token('IGNORE'      , ' +'),
 
-        # Token with values
+        # Tokens with values
         Token('STRING' , "'(([^']*(\\\\')?)*[^\\\\])'" , 1),
         Token('NUMBER' , '(0|[1-9][0-9]*)'             , 0),
         Token('TERM'   , '[a-zA-Z0-9_\\\\]+'           , 0),
@@ -150,7 +151,7 @@ def lexical_analisys(content):
         Token('UNESC_STRING' , '"(([^"]*(\\\\")?)*[^\\\\])"' , 1),
     ]
 
-    tokens = ['START_BLOCK']
+    tokens = ['START_BLOCK'] # Initial block of code
 
     tokenize(token_defs, content, statement)
 
@@ -159,7 +160,7 @@ def lexical_analisys(content):
     return tokens
 
 def build_tree(tokens):
-
+    """ Build execution tree for interpreter """
     def prec(name):
         if name in ['SQR']: return 90
         elif name in ['MUL', 'DIV']: return 80
@@ -207,6 +208,8 @@ def build_tree(tokens):
         }
 
     def build_def(token):
+        # TODO Nasty hack, need to do it some other way
+        # it is problem resolve it term is term, or func name
         args = []
         name = mpop(tokens, 2)
         while tokens[0] == 'TERM': 
